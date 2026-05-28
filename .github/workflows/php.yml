@@ -1,0 +1,42 @@
+name: PHP CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php-version: ['8.2', '8.3']
+
+    name: PHP ${{ matrix.php-version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, intl, json, xml
+          coverage: xdebug
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run PHPUnit tests
+        run: ./vendor/bin/phpunit --colors=always
+
+      - name: Run PHPUnit with coverage
+        if: matrix.php-version == '8.3'
+        run: ./vendor/bin/phpunit --coverage-text --colors=always
+        env:
+          XDEBUG_MODE: coverage

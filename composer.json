@@ -1,15 +1,31 @@
 {
     "name": "hoksi/ci4-crud",
-    "description": "CodeIgniter 4 CRUD library — Auto-generate CRUD interfaces with minimal code",
+    "description": "CodeIgniter 4 CRUD library — Auto-generate CRUD interfaces with minimal code. Supports React SPA (Mode A) and PHP hybrid (Mode B).",
     "type": "library",
     "license": "MIT",
-    "keywords": ["codeigniter4", "codeigniter", "crud", "library", "php"],
+    "keywords": [
+        "codeigniter4",
+        "codeigniter",
+        "crud",
+        "library",
+        "php",
+        "react",
+        "tabulator",
+        "bootstrap5",
+        "admin"
+    ],
     "authors": [
         {
             "name": "hoksi",
-            "email": "hoksi3k@gmail.com"
+            "email": "hoksi3k@gmail.com",
+            "homepage": "https://github.com/hoksi"
         }
     ],
+    "homepage": "https://github.com/hoksi/ci4-crud",
+    "support": {
+        "issues": "https://github.com/hoksi/ci4-crud/issues",
+        "source": "https://github.com/hoksi/ci4-crud"
+    },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
@@ -28,6 +44,11 @@
     "autoload-dev": {
         "psr-4": {
             "Hoksi\\Ci4Crud\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "codeigniter4": {
+            "namespace": "Hoksi\\Ci4Crud"
         }
     }
 }
