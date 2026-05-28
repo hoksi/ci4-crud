@@ -4,7 +4,12 @@ namespace Hoksi\Ci4Crud;
 
 use Hoksi\Ci4Crud\Config\CrudConfig;
 use Hoksi\Ci4Crud\Core\ActionManager;
+use Hoksi\Ci4Crud\Core\DeleteHandler;
+use Hoksi\Ci4Crud\Core\InsertHandler;
+use Hoksi\Ci4Crud\Core\QueryHandler;
+use Hoksi\Ci4Crud\Core\ReadHandler;
 use Hoksi\Ci4Crud\Core\SchemaSerializer;
+use Hoksi\Ci4Crud\Core\UpdateHandler;
 
 class Ci4Crud
 {
@@ -460,15 +465,35 @@ class Ci4Crud
     // 렌더링
     // -------------------------------------------------------------------------
 
-    public function renderJson(): array
+    public function renderJson(): mixed
     {
-        // TODO: Phase 1 — ActionManager로 action 감지 후 JSON 반환
-        $action = (new ActionManager())->detect();
+        $manager = new ActionManager();
+        $action  = $manager->detect();
+        $id      = $manager->getId();
 
-        return match($action) {
-            'schema' => (new SchemaSerializer($this->config))->toArray(),
-            default  => ['success' => false, 'message' => 'Not implemented yet'],
+        $postData = $_POST;
+
+        $result = match($action) {
+            'schema'          => (new SchemaSerializer($this->config))->toArray(),
+            'list'            => (new QueryHandler($this->config))->list(),
+            'read'            => (new ReadHandler($this->config))->handle($id ?? 0),
+            'insert'          => (new InsertHandler($this->config))->handle($postData),
+            'update'          => (new UpdateHandler($this->config))->handle($id ?? 0, $postData),
+            'delete'          => (new DeleteHandler($this->config))->handle($id ?? 0),
+            'delete_multiple' => (new DeleteHandler($this->config))->handleMultiple($postData['ids'] ?? []),
+            'relation'        => (new QueryHandler($this->config))->relation(
+                                     $_GET['field'] ?? '',
+                                     $_GET['q']     ?? '',
+                                 ),
+            default           => ['success' => false, 'message' => '지원하지 않는 액션입니다.'],
         };
+
+        // CI4 환경에서는 ResponseInterface 반환, 아닌 경우 배열 반환
+        if (function_exists('service')) {
+            return service('response')->setJSON($result);
+        }
+
+        return $result;
     }
 
     public function render(): string

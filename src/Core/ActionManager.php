@@ -4,16 +4,25 @@ namespace Hoksi\Ci4Crud\Core;
 
 class ActionManager
 {
-    private static array $validActions = [
+    private const VALID_ACTIONS = [
         'schema', 'list', 'read', 'insert', 'update',
         'delete', 'delete_multiple', 'relation', 'export',
     ];
 
     public function detect(): string
     {
-        // TODO: Phase 1 — $_GET['action'] 파라미터 감지
         $action = $_GET['action'] ?? 'list';
 
-        return in_array($action, self::$validActions, true) ? $action : 'list';
+        return in_array($action, self::VALID_ACTIONS, true) ? $action : 'list';
+    }
+
+    public function getMethod(): string
+    {
+        return strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+    }
+
+    public function getId(): int|string|null
+    {
+        return $_GET['id'] ?? null;
     }
 }
