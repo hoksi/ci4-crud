@@ -4,6 +4,7 @@ namespace Hoksi\Ci4Crud\Core;
 
 use CodeIgniter\Database\BaseConnection;
 use Hoksi\Ci4Crud\Config\CrudConfig;
+use Hoksi\Ci4Crud\Core\RelationHandler;
 
 class InsertHandler
 {
@@ -49,6 +50,9 @@ class InsertHandler
 
         $this->getDb()->table($this->config->table)->insert($data);
         $insertId = $this->getDb()->insertID();
+
+        // N:N 관계 동기화
+        (new RelationHandler($this->config, $this->db))->syncNtoN($insertId, $data);
 
         // after_insert 콜백
         foreach ($this->config->callbacks['after_insert'] ?? [] as $fn) {

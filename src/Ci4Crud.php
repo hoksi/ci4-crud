@@ -8,6 +8,7 @@ use Hoksi\Ci4Crud\Core\DeleteHandler;
 use Hoksi\Ci4Crud\Core\InsertHandler;
 use Hoksi\Ci4Crud\Core\QueryHandler;
 use Hoksi\Ci4Crud\Core\ReadHandler;
+use Hoksi\Ci4Crud\Core\RelationHandler;
 use Hoksi\Ci4Crud\Core\SchemaSerializer;
 use Hoksi\Ci4Crud\Core\UpdateHandler;
 
@@ -481,9 +482,10 @@ class Ci4Crud
             'update'          => (new UpdateHandler($this->config))->handle($id ?? 0, $postData),
             'delete'          => (new DeleteHandler($this->config))->handle($id ?? 0),
             'delete_multiple' => (new DeleteHandler($this->config))->handleMultiple($postData['ids'] ?? []),
-            'relation'        => (new QueryHandler($this->config))->relation(
-                                     $_GET['field'] ?? '',
-                                     $_GET['q']     ?? '',
+            'relation'        => (new RelationHandler($this->config))->getOptions(
+                                     $_GET['field']        ?? '',
+                                     $_GET['q']            ?? '',
+                                     $_GET['parent_value'] ?? '',
                                  ),
             default           => ['success' => false, 'message' => '지원하지 않는 액션입니다.'],
         };

@@ -4,6 +4,7 @@ namespace Hoksi\Ci4Crud\Core;
 
 use CodeIgniter\Database\BaseConnection;
 use Hoksi\Ci4Crud\Config\CrudConfig;
+use Hoksi\Ci4Crud\Core\RelationHandler;
 
 class UpdateHandler
 {
@@ -52,6 +53,9 @@ class UpdateHandler
         }
 
         $this->getDb()->table($this->config->table)->where($pk, $id)->update($data);
+
+        // N:N 관계 동기화
+        (new RelationHandler($this->config, $this->db))->syncNtoN($id, $data);
 
         // after_update 콜백
         foreach ($this->config->callbacks['after_update'] ?? [] as $fn) {
