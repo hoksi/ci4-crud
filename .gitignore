@@ -1,0 +1,7 @@
+vendor/
+node_modules/
+.env
+.omc/
+*.log
+.phpunit.result.cache
+coverage/
