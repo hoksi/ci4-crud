@@ -208,7 +208,168 @@ class RendererTest extends TestCase
 
         $html = (new FormRenderer($config))->renderAdd();
 
-        $this->assertStringContainsString('ci4crud_validation_errors', $html);
+        $this->assertStringContainsString('ci4crud_form_errors', $html);
+    }
+
+    public function testFormRendererContainsMultipartEnctype(): void
+    {
+        $config             = new CrudConfig();
+        $config->subject    = '상품';
+        $config->primaryKey = 'id';
+
+        $html = (new FormRenderer($config))->renderAdd();
+
+        $this->assertStringContainsString('multipart/form-data', $html);
+    }
+
+    // =========================================================================
+    // FormRenderer — 필드 타입별 렌더링 테스트
+    // =========================================================================
+
+    private function makeFormRendererWithField(string $fieldName, string $fieldType, array $options = []): FormRenderer
+    {
+        $config             = new CrudConfig();
+        $config->subject    = '테스트';
+        $config->primaryKey = 'id';
+        $config->addFields  = [$fieldName];
+        $config->fieldTypes[$fieldName] = ['type' => $fieldType, 'options' => $options, 'form' => 'all'];
+
+        $mockField = (object)['name' => $fieldName, 'type' => 'varchar', 'max_length' => 255, 'primary_key' => false];
+
+        return new FormRenderer($config);
+    }
+
+    public function testFormRendererRendersTextarea(): void
+    {
+        $config             = new CrudConfig();
+        $config->subject    = '게시글';
+        $config->primaryKey = 'id';
+        $config->addFields  = ['content'];
+        $config->fieldTypes['content'] = ['type' => 'textarea', 'options' => [], 'form' => 'all'];
+
+        $html = (new FormRenderer($config))->renderAdd();
+
+        $this->assertStringContainsString('<textarea', $html);
+        $this->assertStringContainsString('name="content"', $html);
+    }
+
+    public function testFormRendererRendersDropdown(): void
+    {
+        $config             = new CrudConfig();
+        $config->subject    = '주문';
+        $config->primaryKey = 'id';
+        $config->addFields  = ['status'];
+        $config->fieldTypes['status'] = [
+            'type'    => 'dropdown',
+            'options' => ['active' => '활성', 'inactive' => '비활성'],
+            'form'    => 'all',
+        ];
+
+        $html = (new FormRenderer($config))->renderAdd();
+
+        $this->assertStringContainsString('<select', $html);
+        $this->assertStringContainsString('활성', $html);
+        $this->assertStringContainsString('비활성', $html);
+    }
+
+    public function testFormRendererRendersPasswordToggle(): void
+    {
+        $config             = new CrudConfig();
+        $config->subject    = '사용자';
+        $config->primaryKey = 'id';
+        $config->addFields  = ['password'];
+        $config->fieldTypes['password'] = ['type' => 'password_toggle', 'options' => [], 'form' => 'all'];
+
+        $html = (new FormRenderer($config))->renderAdd();
+
+        $this->assertStringContainsString('type="password"', $html);
+        $this->assertStringContainsString('input-group', $html);
+    }
+
+    public function testFormRendererRendersUploadField(): void
+    {
+        $config             = new CrudConfig();
+        $config->subject    = '파일';
+        $config->primaryKey = 'id';
+        $config->addFields  = ['attachment'];
+        $config->fieldTypes['attachment'] = ['type' => 'upload_file', 'options' => [], 'form' => 'all'];
+
+        $html = (new FormRenderer($config))->renderAdd();
+
+        $this->assertStringContainsString('type="file"', $html);
+    }
+
+    public function testFormRendererRenderAssetsReturnsEmptyWhenNoSpecialTypes(): void
+    {
+        $config             = new CrudConfig();
+        $config->primaryKey = 'id';
+        $config->addFields  = ['name'];
+        $config->fieldTypes['name'] = ['type' => 'string', 'options' => [], 'form' => 'all'];
+
+        $assets = (new FormRenderer($config))->renderAssets('add');
+
+        $this->assertSame('', $assets);
+    }
+
+    public function testFormRendererRenderAssetsIncludesFlatpickrForDate(): void
+    {
+        $config             = new CrudConfig();
+        $config->primaryKey = 'id';
+        $config->addFields  = ['birth_date'];
+        $config->fieldTypes['birth_date'] = ['type' => 'date', 'options' => [], 'form' => 'all'];
+
+        $assets = (new FormRenderer($config))->renderAssets('add');
+
+        $this->assertStringContainsString('flatpickr', $assets);
+    }
+
+    public function testFormRendererRenderAssetsIncludesTomSelectForRelation(): void
+    {
+        $config             = new CrudConfig();
+        $config->primaryKey = 'id';
+        $config->addFields  = ['dept_id'];
+        $config->fieldTypes['dept_id'] = ['type' => 'relation', 'options' => [], 'form' => 'all'];
+
+        $assets = (new FormRenderer($config))->renderAssets('add');
+
+        $this->assertStringContainsString('tom-select', $assets);
+    }
+
+    public function testFormRendererRenderAssetsIncludesCKEditorForWysiwyg(): void
+    {
+        $config             = new CrudConfig();
+        $config->primaryKey = 'id';
+        $config->addFields  = ['content'];
+        $config->fieldTypes['content'] = ['type' => 'wysiwyg', 'options' => [], 'form' => 'all'];
+
+        $assets = (new FormRenderer($config))->renderAssets('add');
+
+        $this->assertStringContainsString('ckeditor', $assets);
+    }
+
+    public function testFormRendererDateFieldIncludesFlatpickrInit(): void
+    {
+        $config             = new CrudConfig();
+        $config->primaryKey = 'id';
+        $config->addFields  = ['start_date'];
+        $config->fieldTypes['start_date'] = ['type' => 'date', 'options' => [], 'form' => 'all'];
+
+        $html = (new FormRenderer($config))->renderAdd();
+
+        $this->assertStringContainsString('flatpickr', $html);
+    }
+
+    public function testFormRendererColorFieldHasDefaultValue(): void
+    {
+        $config             = new CrudConfig();
+        $config->primaryKey = 'id';
+        $config->addFields  = ['bg_color'];
+        $config->fieldTypes['bg_color'] = ['type' => 'color', 'options' => [], 'form' => 'all'];
+
+        $html = (new FormRenderer($config))->renderAdd();
+
+        $this->assertStringContainsString('type="color"', $html);
+        $this->assertStringContainsString('#000000', $html);
     }
 
     // =========================================================================
