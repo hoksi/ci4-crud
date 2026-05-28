@@ -5,6 +5,7 @@ namespace Hoksi\Ci4Crud\Core;
 use CodeIgniter\Database\BaseConnection;
 use Hoksi\Ci4Crud\Config\CrudConfig;
 use Hoksi\Ci4Crud\Core\RelationHandler;
+use Hoksi\Ci4Crud\Core\UploadHandler;
 
 class InsertHandler
 {
@@ -25,6 +26,11 @@ class InsertHandler
     public function handle(array $data): array
     {
         $data = $this->stripNonDbFields($data);
+
+        // 파일 업로드 처리
+        if (!empty($this->config->uploadFields)) {
+            $data = (new UploadHandler($this->config))->injectUploadedPaths($data);
+        }
 
         // before_insert 콜백
         foreach ($this->config->callbacks['before_insert'] ?? [] as $fn) {

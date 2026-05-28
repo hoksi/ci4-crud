@@ -14,7 +14,8 @@
     "prefer-stable": true,
     "require": {
         "php": "^8.2",
-        "codeigniter4/framework": "^4.7"
+        "codeigniter4/framework": "^4.7",
+        "phpoffice/phpspreadsheet": "^2.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0"

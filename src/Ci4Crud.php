@@ -478,6 +478,11 @@ class Ci4Crud
 
         $postData = $_POST;
 
+        // export는 직접 출력 후 exit → 별도 처리
+        if ($action === 'export') {
+            (new ExportRenderer($this->config))->export($_GET['type'] ?? 'csv');
+        }
+
         $result = match($action) {
             'schema'          => (new SchemaSerializer($this->config))->toArray(),
             'list'            => (new QueryHandler($this->config))->list(),
@@ -534,7 +539,7 @@ class Ci4Crud
             'edit'   => (new FormRenderer($this->config))->renderEdit($id),
             'read'   => (new FormRenderer($this->config))->renderRead($id),
             'clone'  => (new FormRenderer($this->config))->renderClone($id),
-            'export' => (new ExportRenderer($this->config))->csv(),
+            'export' => (new ExportRenderer($this->config))->export($_GET['type'] ?? 'csv'),
             default  => (new DatagridRenderer($this->config))->render(),
         };
     }
