@@ -10,7 +10,11 @@ use Hoksi\Ci4Crud\Core\QueryHandler;
 use Hoksi\Ci4Crud\Core\ReadHandler;
 use Hoksi\Ci4Crud\Core\RelationHandler;
 use Hoksi\Ci4Crud\Core\SchemaSerializer;
+use Hoksi\Ci4Crud\Core\StateManager;
 use Hoksi\Ci4Crud\Core\UpdateHandler;
+use Hoksi\Ci4Crud\Renderer\DatagridRenderer;
+use Hoksi\Ci4Crud\Renderer\ExportRenderer;
+use Hoksi\Ci4Crud\Renderer\FormRenderer;
 
 class Ci4Crud
 {
@@ -498,10 +502,41 @@ class Ci4Crud
         return $result;
     }
 
-    public function render(): string
+    public function render(): mixed
     {
-        // TODO: Phase 1 (Mode B) — StateManager로 상태 감지 후 HTML 반환
-        return '';
+        $state    = (new StateManager())->detect();
+        $id       = $_GET['id'] ?? 0;
+        $postData = $_POST;
+
+        // AJAX / JSON 응답 상태
+        $jsonStates = ['ajax_list', 'insert', 'update', 'delete', 'delete_multiple'];
+
+        if (in_array($state, $jsonStates, true)) {
+            $result = match($state) {
+                'ajax_list'      => (new QueryHandler($this->config))->list(),
+                'insert'         => (new InsertHandler($this->config))->handle($postData),
+                'update'         => (new UpdateHandler($this->config))->handle($id, $postData),
+                'delete'         => (new DeleteHandler($this->config))->handle($id),
+                'delete_multiple'=> (new DeleteHandler($this->config))->handleMultiple($postData['ids'] ?? []),
+            };
+
+            if (function_exists('service')) {
+                return service('response')->setJSON($result);
+            }
+
+            return $result;
+        }
+
+        // HTML 응답 상태
+        return match($state) {
+            'list'   => (new DatagridRenderer($this->config))->render(),
+            'add'    => (new FormRenderer($this->config))->renderAdd(),
+            'edit'   => (new FormRenderer($this->config))->renderEdit($id),
+            'read'   => (new FormRenderer($this->config))->renderRead($id),
+            'clone'  => (new FormRenderer($this->config))->renderClone($id),
+            'export' => (new ExportRenderer($this->config))->csv(),
+            default  => (new DatagridRenderer($this->config))->render(),
+        };
     }
 
     public function renderSchema(): array
